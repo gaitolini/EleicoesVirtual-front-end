@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
+    <title><%= htmlWebpackPlugin.options.title %></title>
+
+    <!-- Firebase SDKs (ajuste de acordo com as necessidades) -->
+    <script defer src="/__/firebase/10.14.1/firebase-app-compat.js"></script>
+    <script defer src="/__/firebase/10.14.1/firebase-auth-compat.js"></script>
+    <script
+      defer
+      src="/__/firebase/10.14.1/firebase-firestore-compat.js"
+    ></script>
+    <script defer src="/__/firebase/init.js"></script>
+
+    <style media="screen">
+      body {
+        background: #eceff1;
+        color: rgba(0, 0, 0, 0.87);
+        font-family: Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <strong
+        >We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work
+        properly without JavaScript enabled. Please enable it to
+        continue.</strong
+      >
+    </noscript>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loadEl = document.querySelector("#load");
+        try {
+          let app = firebase.app();
+          let features = ["auth", "firestore"].filter(
+            (feature) => typeof app[feature] === "function"
+          );
+          console.log(`Firebase SDK loaded with ${features.join(", ")}`);
+        } catch (e) {
+          console.error("Error loading Firebase SDK:", e);
+        }
+      });
+    </script>
+  </body>
+</html>
