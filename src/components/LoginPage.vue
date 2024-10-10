@@ -1,3 +1,4 @@
+/* eslint-disable vue/multi-word-component-names */
 <template>
   <div class="login-container">
     <h1>Eleições Virtuais</h1>
@@ -36,6 +37,7 @@
 </template>
 
 <script>
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider } from "../firebase-config";
 
 export default {
@@ -51,7 +53,8 @@ export default {
   methods: {
     async loginWithGoogle() {
       try {
-        await auth.signInWithPopup(googleProvider);
+        // Correção para Firebase v9 modular
+        await signInWithPopup(auth, googleProvider);
         this.$router.push("/dashboard");
       } catch (error) {
         alert("Erro ao fazer login com Google: " + error.message);
@@ -59,7 +62,8 @@ export default {
     },
     async loginWithEmail() {
       try {
-        await auth.signInWithEmailAndPassword(this.email, this.password);
+        // Correção para Firebase v9 modular
+        await signInWithEmailAndPassword(auth, this.email, this.password);
         this.$router.push("/dashboard");
       } catch (error) {
         alert("Erro ao fazer login: " + error.message);
@@ -67,10 +71,8 @@ export default {
     },
     async signupWithEmail() {
       try {
-        await auth.createUserWithEmailAndPassword(
-          this.newEmail,
-          this.newPassword
-        );
+        // Correção para Firebase v9 modular
+        await createUserWithEmailAndPassword(auth, this.newEmail, this.newPassword);
         this.$router.push("/dashboard");
       } catch (error) {
         alert("Erro ao se cadastrar: " + error.message);
@@ -78,6 +80,7 @@ export default {
     },
   },
 };
+
 </script>
 
 <style scoped>

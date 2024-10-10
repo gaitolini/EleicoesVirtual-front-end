@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "eleicoes-virtual/dist",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
