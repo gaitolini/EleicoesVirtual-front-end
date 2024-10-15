@@ -37,10 +37,14 @@
 </template>
 
 <script>
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, googleProvider } from "../firebase-config";
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from "../firebase-config"; // O auth é importado do arquivo firebase-config
+
+// Inicializando o Google Provider de forma correta
+const googleProvider = new GoogleAuthProvider();
 
 export default {
+  name: "LoginPage",
   data() {
     return {
       email: "",
@@ -51,11 +55,23 @@ export default {
     };
   },
   methods: {
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * Faz login do usuário usando o provedor de autenticação do Google.
+ * 
+ * Após a autenticação bem-sucedida, obtém o token JWT do usuário e armazena
+ * no localStorage para uso futuro. Em seguida, redireciona o usuário para a 
+ * página do dashboard. Caso ocorra um erro durante o processo de login, 
+ * exibe uma mensagem de alerta com o erro.
+ */
+/******  d820e22a-4e5b-42c0-a179-08ab47d76c7f  *******/
     async loginWithGoogle() {
       try {
         // Correção para Firebase v9 modular
-        await signInWithPopup(auth, googleProvider);
-        this.$router.push("/dashboard");
+        const result = await signInWithPopup(auth, googleProvider);
+        const token = await result.user.getIdToken(); // Obtém o token JWT
+        localStorage.setItem("userToken", token); // Armazena o token no localStorage
+        this.$router.push("/dashboard"); // Redireciona para o dashboard
       } catch (error) {
         alert("Erro ao fazer login com Google: " + error.message);
       }
@@ -63,8 +79,10 @@ export default {
     async loginWithEmail() {
       try {
         // Correção para Firebase v9 modular
-        await signInWithEmailAndPassword(auth, this.email, this.password);
-        this.$router.push("/dashboard");
+        const result = await signInWithEmailAndPassword(auth, this.email, this.password);
+        const token = await result.user.getIdToken(); // Obtém o token JWT
+        localStorage.setItem("userToken", token); // Armazena o token no localStorage
+        this.$router.push("/dashboard"); // Redireciona para o dashboard
       } catch (error) {
         alert("Erro ao fazer login: " + error.message);
       }
@@ -72,15 +90,16 @@ export default {
     async signupWithEmail() {
       try {
         // Correção para Firebase v9 modular
-        await createUserWithEmailAndPassword(auth, this.newEmail, this.newPassword);
-        this.$router.push("/dashboard");
+        const result = await createUserWithEmailAndPassword(auth, this.newEmail, this.newPassword);
+        const token = await result.user.getIdToken(); // Obtém o token JWT após o cadastro
+        localStorage.setItem("userToken", token); // Armazena o token no localStorage
+        this.$router.push("/dashboard"); // Redireciona para o dashboard
       } catch (error) {
         alert("Erro ao se cadastrar: " + error.message);
       }
     },
   },
 };
-
 </script>
 
 <style scoped>

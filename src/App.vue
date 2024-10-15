@@ -1,20 +1,27 @@
 <template>
-  <router-view />
+  <div id="app">
+    <header>
+      <h1>Eleições Virtuais</h1>
+      <p>Sistema de eleições virtuais para usu didático</p>
+    </header>
+    <router-view></router-view> <!-- Este elemento renderiza os componentes baseados na rota ativa -->
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-}
+  name: "App",
+};
 </script>
 
-<style>
+<style scoped>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 20px;
+}
+header {
+  background-color: #2196f3;
+  color: white;
+  padding: 10px;
 }
 </style>
