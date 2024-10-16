@@ -40,6 +40,7 @@
     methods: {
       async fetchElections() {
         try {
+          // const response = await axios.get("http://localhost:8081/eleicoes");
           const response = await axios.get("https://api.gaitolini.com.br/eleicoes");
           this.eleicoes = response.data;
         } catch (error) {

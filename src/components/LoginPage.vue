@@ -55,16 +55,6 @@ export default {
     };
   },
   methods: {
-/*************  ✨ Codeium Command ⭐  *************/
-/**
- * Faz login do usuário usando o provedor de autenticação do Google.
- * 
- * Após a autenticação bem-sucedida, obtém o token JWT do usuário e armazena
- * no localStorage para uso futuro. Em seguida, redireciona o usuário para a 
- * página do dashboard. Caso ocorra um erro durante o processo de login, 
- * exibe uma mensagem de alerta com o erro.
- */
-/******  d820e22a-4e5b-42c0-a179-08ab47d76c7f  *******/
     async loginWithGoogle() {
       try {
         // Correção para Firebase v9 modular
