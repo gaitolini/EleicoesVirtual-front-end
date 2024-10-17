@@ -2,7 +2,7 @@
   <div id="app">
     <header>
       <h1>Eleições Virtuais</h1>
-      <p>Sistema de eleições virtuais para usu didático</p>
+      <p>Sistema de eleições virtuais para uso didático</p>
     </header>
     <router-view></router-view> <!-- Este elemento renderiza os componentes baseados na rota ativa -->
   </div>
