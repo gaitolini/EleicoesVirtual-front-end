@@ -28,7 +28,8 @@
 
 <script>
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase-config';
+import { auth, googleProvider, db } from '../firebase-config';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default {
   name: 'LoginPage',
@@ -42,15 +43,32 @@ export default {
     async googleLogin() {
       try {
         const result = await signInWithPopup(auth, googleProvider);
-        const token = await result.user.getIdToken();
-        localStorage.setItem('userToken', token);
-        this.$router.push('/dashboard');
+        const user = result.user;
+        // Verificar se o usuário já está registrado no Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+        if (userDoc.exists()) {
+          // Usuário já registrado, prosseguir para o dashboard
+          const token = await user.getIdToken();
+          localStorage.setItem('userToken', token);
+          this.$router.push('/dashboard');
+        } else {
+          // Usuário não registrado, redirecionar para a página de inscrição para fornecer CPF
+          this.$router.push({ path: '/inscreva-se', query: { email: user.email } });
+        }
       } catch (error) {
         alert('Erro ao fazer login com Google: ' + error.message);
       }
     },
     async loginWithEmail() {
       try {
+        // Verificar se o email já está registrado no Firestore antes de fazer login
+        const userDoc = await getDoc(doc(db, 'users', this.email));
+        if (!userDoc.exists()) {
+          alert('Usuário não registrado. Por favor, inscreva-se com seu CPF.');
+          return;
+        }
+
         const result = await signInWithEmailAndPassword(auth, this.email, this.password);
         const token = await result.user.getIdToken();
         localStorage.setItem('userToken', token);

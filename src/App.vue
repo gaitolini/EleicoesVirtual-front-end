@@ -20,7 +20,7 @@ export default {
   margin-top: 20px;
 }
 header {
-  background-color: #2196f3;
+  background-color: #8250df;
   color: white;
   padding: 10px;
 }
