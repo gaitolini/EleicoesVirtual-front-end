@@ -1,42 +1,65 @@
-// Arquivo: src/components/LoginPage.vue
-
 <template>
   <div class="login-container">
     <div class="login-box">
-      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub Logo" class="logo" />
+      <img
+        src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+        alt="GitHub Logo"
+        class="logo"
+      />
       <h1>Entrar no Eleições Virtuais</h1>
       <form @submit.prevent="loginWithEmail">
         <div class="form-group">
-          <label for="email">Nome de usuário ou endereço de e-mail</label>
-          <input type="email" id="email" v-model="email" placeholder="Digite seu email" required />
+          <label for="email">Endereço de e-mail</label>
+          <input
+            type="email"
+            id="email"
+            v-model="email"
+            placeholder="Digite seu email"
+            required
+          />
         </div>
         <div class="form-group">
           <label for="password">Senha</label>
-          <input type="password" id="password" v-model="password" placeholder="Digite sua senha" required />
-          <a href="#" class="forgot-password">Esqueceu sua senha?</a>
+          <input
+            type="password"
+            id="password"
+            v-model="password"
+            placeholder="Digite sua senha"
+            required
+          />
+          <a href="#" class="forgot-password" @click="resetPassword"
+            >Esqueceu sua senha?</a
+          >
         </div>
         <button type="submit" class="btn btn-primary">Entrar</button>
       </form>
       <div class="separator">ou</div>
-      <button @click="googleLogin" class="btn btn-google">Login com Google</button>
+      <button @click="googleLogin" class="btn btn-google">
+        Login com Google
+      </button>
       <div class="signup-link">
-        Novo no Eleições Virtuais? <span @click="goToSignup" class="link">Crie uma conta</span>
+        Novo no Eleições Virtuais?
+        <span @click="goToSignup" class="link">Crie uma conta</span>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, googleProvider, db } from '../firebase-config';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  fetchSignInMethodsForEmail,
+} from "firebase/auth";
+import { auth, googleProvider } from "../firebase-config";
 
 export default {
-  name: 'LoginPage',
+  name: "LoginPage",
   data() {
     return {
-      email: '',
-      password: ''
+      email: "",
+      password: "",
     };
   },
   methods: {
@@ -44,43 +67,72 @@ export default {
       try {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
-        // Verificar se o usuário já está registrado no Firestore
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
 
-        if (userDoc.exists()) {
+        // Verificar se o usuário já está registrado
+        const signInMethods = await fetchSignInMethodsForEmail(
+          auth,
+          user.email
+        );
+        if (signInMethods.length === 0) {
+          // Usuário não registrado, redirecionar para a página de inscrição
+          this.$router.push({
+            path: "/inscreva-se",
+            query: { email: user.email },
+          });
+        } else {
           // Usuário já registrado, prosseguir para o dashboard
           const token = await user.getIdToken();
-          localStorage.setItem('userToken', token);
-          this.$router.push('/dashboard');
-        } else {
-          // Usuário não registrado, redirecionar para a página de inscrição para fornecer CPF
-          this.$router.push({ path: '/inscreva-se', query: { email: user.email } });
+          localStorage.setItem("userToken", token);
+          this.$router.push("/dashboard");
         }
       } catch (error) {
-        alert('Erro ao fazer login com Google: ' + error.message);
+        alert("Erro ao fazer login com Google: " + error.message);
       }
     },
     async loginWithEmail() {
       try {
-        // Verificar se o email já está registrado no Firestore antes de fazer login
-        const userDoc = await getDoc(doc(db, 'users', this.email));
-        if (!userDoc.exists()) {
-          alert('Usuário não registrado. Por favor, inscreva-se com seu CPF.');
-          return;
-        }
-
-        const result = await signInWithEmailAndPassword(auth, this.email, this.password);
+        // Primeiro, tentar logar com email e senha
+        const result = await signInWithEmailAndPassword(
+          auth,
+          this.email,
+          this.password
+        );
         const token = await result.user.getIdToken();
-        localStorage.setItem('userToken', token);
-        this.$router.push('/dashboard');
+        localStorage.setItem("userToken", token);
+        this.$router.push("/dashboard");
       } catch (error) {
-        alert('Erro ao fazer login: ' + error.message);
+        // Se o erro for que o usuário não tem senha, sugerir a criação de senha
+        if (error.code === "auth/user-not-found") {
+          alert(
+            "O email já está registrado com um provedor de identidade, mas sem senha. Clique aqui para definir uma senha para o email."
+          );
+        } else if (error.code === "auth/wrong-password") {
+          alert(
+            "Senha incorreta. Verifique suas credenciais e tente novamente."
+          );
+        } else {
+          alert("Erro ao fazer login: " + error.message);
+        }
       }
     },
     goToSignup() {
-      this.$router.push('/inscreva-se');
-    }
-  }
+      this.$router.push("/inscreva-se");
+    },
+    async resetPassword() {
+      try {
+        if (!this.email) {
+          alert("Por favor, insira o seu email para redefinir a senha.");
+          return;
+        }
+        await sendPasswordResetEmail(auth, this.email);
+        alert(
+          "Um email para redefinição de senha foi enviado para o seu endereço de email."
+        );
+      } catch (error) {
+        alert("Erro ao enviar email de redefinição de senha: " + error.message);
+      }
+    },
+  },
 };
 </script>
 
@@ -91,17 +143,18 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #f4f4f4;
+  background-color: #0d1117;
+  color: #c9d1d9;
 }
 
 .login-box {
-  background-color: #24292e;
+  background-color: #161b22;
   padding: 2rem;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 360px;
-  color: white;
+  color: #f0f6fc;
 }
 
 .logo {
@@ -127,27 +180,29 @@ label {
 
 input {
   width: 100%;
-  padding: 10px;
+  padding: 15px;
   margin-top: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f6f8fa;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background-color: #0d1117;
+  color: #c9d1d9;
 }
 
 .forgot-password {
   font-size: 0.875rem;
-  color: #0366d6;
+  color: #58a6ff;
   text-decoration: none;
   float: right;
   margin-top: 0.5rem;
+  cursor: pointer;
 }
 
 .btn {
   width: 100%;
-  padding: 10px;
+  padding: 15px;
   margin-top: 1rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
@@ -172,7 +227,7 @@ input {
 .signup-link {
   margin-top: 1.5rem;
   font-size: 0.875rem;
-  color: #f6f8fa;
+  color: #f0f6fc;
 }
 
 .link {

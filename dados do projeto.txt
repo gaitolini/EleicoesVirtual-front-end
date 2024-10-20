@@ -1,0 +1,22 @@
+Cloudflare
+Tunnel Zero: api.gaitolini.com.br/eleicao
+
+AWS
+EC2:
+
+ID da instância
+
+i-0cdb7aacbcf9a5931 (EleicoesVirtual-backend)
+Endereço IPv4 público
+
+13.56.254.121 | endereço aberto 
+Endereços IPv4 privados
+
+172.31.25.62
+Endereço IPv6
+–
+Estado da instância
+Executando
+DNS IPv4 público
+
+ec2-13-56-254-121.us-west-1.compute.amazonaws.com
