@@ -2,33 +2,47 @@
   <div class="dashboard-container">
     <h2>Bem-vindo ao Painel de Eleições</h2>
 
+    <!-- Se o usuário for gaitolini@gmail.com, exibir a seleção de API -->
+    <div v-if="isTestUser" class="api-selection">
+      <label for="apiUrl">Selecione o ambiente de API:</label>
+      <select v-model="apiUrl" id="apiUrl">
+        <option value="http://localhost:8081">Localhost</option>
+        <option value="https://api.gaitolini.com.br">Produção</option>
+      </select>
+    </div>
+
     <!-- Botão para criar nova eleição -->
     <div class="actions">
       <form @submit.prevent="criarEleicao" class="create-election-form">
         <input
-          v-model="novaEleicao.name"
+          v-model="novaEleicao.nome"
           type="text"
           placeholder="Nome da Eleição"
           required
         />
         <input
-          v-model="novaEleicao.description"
+          v-model="novaEleicao.descricao"
           type="text"
           placeholder="Descrição"
           required
         />
-        <input v-model="novaEleicao.date" type="date" required />
+        <input v-model="novaEleicao.dataInicio" type="date" required />
         <button type="submit" class="action-button">Criar Nova Eleição</button>
       </form>
+    </div>
+
+    <!-- Mensagem de erro -->
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
     </div>
 
     <!-- Lista de eleições -->
     <div class="elections-list">
       <h3>Lista de Eleições</h3>
-      <ul v-if="elections.length > 0">
+      <ul v-if="elections && elections.length > 0">
         <li v-for="election in elections" :key="election.id">
-          <strong>{{ election.name }}</strong> - {{ election.description }} -
-          {{ formatDate(election.date) }}
+          <strong>{{ election.nome }}</strong> - {{ election.descricao }} -
+          {{ formatDate(election.dataInicio) }}
         </li>
       </ul>
       <p v-else>Não há eleições disponíveis no momento.</p>
@@ -37,7 +51,8 @@
 </template>
 
 <script>
-import axios from "axios"; // Para fazer as requisições HTTP
+import axios from "axios";
+import { getAuth } from "firebase/auth"; // Certifique-se de importar o auth do Firebase
 
 export default {
   name: "DashboardEleicoes",
@@ -45,13 +60,50 @@ export default {
     return {
       elections: [], // Armazena as eleições obtidas da API
       novaEleicao: {
-        name: "",
-        description: "",
-        date: "",
+        nome: "",
+        descricao: "",
+        dataInicio: "",
       },
+      apiUrl: "http://localhost:8081", // "https://api.gaitolini.com.br", // API de produção por padrão
+      isTestUser: false, // Flag para verificar se o usuário é gaitolini@gmail.com
+      errorMessage: "", // Para exibir mensagens de erro
     };
   },
   methods: {
+    // Função para obter e armazenar o token JWT
+    async getTokenAndStore() {
+      const auth = getAuth();
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          try {
+            const token = await user.getIdToken(); // Obtém o token JWT
+            localStorage.setItem("jwt_token", token); // Armazena o token no localStorage
+            this.checkUserEmail(); // Verificar o email do usuário
+          } catch (error) {
+            this.errorMessage = "Erro ao obter o token JWT.";
+            console.error("Erro ao obter o token JWT:", error);
+          }
+        } else {
+          console.log("Nenhum usuário autenticado.");
+        }
+      });
+    },
+
+    // Verifica se o usuário autenticado é gaitolini@gmail.com
+    checkUserEmail() {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        const userEmail = user.email;
+        if (userEmail === "gaitolini@gmail.com") {
+          this.isTestUser = true; // Permitir ao usuário escolher a API
+        }
+      } else {
+        console.log("Nenhum usuário autenticado.");
+      }
+    },
+
     // Formata a data para exibição
     formatDate(dateString) {
       const options = { year: "numeric", month: "long", day: "numeric" };
@@ -61,11 +113,22 @@ export default {
     // Faz a requisição para listar as eleições
     async fetchElections() {
       try {
-        const response = await axios.get(
-          "https://api.gaitolini.com.br/eleicao/eleicoes"
-        );
+        const token = localStorage.getItem("jwt_token"); // Pegue o token JWT do localStorage
+        if (!token) {
+          this.errorMessage =
+            "Token JWT não encontrado. Por favor, faça login novamente.";
+          return;
+        }
+        const response = await axios.get(`${this.apiUrl}/eleicoes`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Inclua o token JWT no cabeçalho
+            "Content-Type": "application/json",
+          },
+        });
         this.elections = response.data;
       } catch (error) {
+        this.elections = []; // Manter elections como array vazio em caso de erro
+        this.errorMessage = "Erro ao carregar eleições.";
         console.error("Erro ao carregar eleições:", error);
       }
     },
@@ -73,23 +136,43 @@ export default {
     // Faz a requisição para criar uma nova eleição
     async criarEleicao() {
       try {
+        console.log("Dados da nova eleição antes do envio:", this.novaEleicao);
+
+        if (this.novaEleicao.dataInicio) {
+          this.novaEleicao.dataInicio = new Date(
+            this.novaEleicao.dataInicio
+          ).toISOString();
+        }
+
+        const token = localStorage.getItem("jwt_token"); // Pegue o token JWT do localStorage
         const response = await axios.post(
-          "https://api.gaitolini.com.br/eleicao/eleicoes",
-          this.novaEleicao
+          `${this.apiUrl}/eleicoes`,
+          this.novaEleicao,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Inclua o token JWT no cabeçalho
+              "Content-Type": "application/json",
+            },
+          }
         );
         console.log("Eleição criada com sucesso:", response.data);
-        // Após criar a eleição, buscar novamente a lista
-        this.fetchElections();
-        // Limpar o formulário
-        this.novaEleicao = { name: "", description: "", date: "" };
+        this.fetchElections(); // Atualiza a lista de eleições após criar uma nova
+        this.novaEleicao = { nome: "", descricao: "", dataInicio: "" }; // Limpar o formulário
       } catch (error) {
+        this.errorMessage = "Erro ao criar eleição.";
         console.error("Erro ao criar eleição:", error);
       }
     },
   },
+
   async mounted() {
-    // Carrega a lista de eleições ao montar o componente
-    await this.fetchElections();
+    try {
+      await this.getTokenAndStore(); // Obter o token e armazenar no localStorage
+      await this.fetchElections(); // Carregar a lista de eleições
+    } catch (error) {
+      this.errorMessage = "Erro durante a montagem do componente.";
+      console.error("Erro durante a montagem do componente:", error);
+    }
   },
 };
 </script>
@@ -170,5 +253,15 @@ button:hover {
 
 .elections-list li strong {
   color: #58a6ff;
+}
+
+.api-selection {
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: red;
+  font-size: 1rem;
+  margin-top: 20px;
 }
 </style>

@@ -7,14 +7,37 @@
     <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
     <title><%= htmlWebpackPlugin.options.title %></title>
 
-    <!-- Firebase SDKs (ajuste de acordo com as necessidades) -->
-    <script defer src="/__/firebase/10.14.1/firebase-app-compat.js"></script>
-    <script defer src="/__/firebase/10.14.1/firebase-auth-compat.js"></script>
-    <script
-      defer
-      src="/__/firebase/10.14.1/firebase-firestore-compat.js"
-    ></script>
-    <script defer src="/__/firebase/init.js"></script>
+    <!-- Firebase SDK (Utilizando Módulos ES) -->
+    <script type="module">
+      // Importar as funções necessárias do Firebase
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+      // Importe outros serviços do Firebase que sejam necessários
+
+      // Configuração do Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyBubRqySf26h_LaTJGfwZlDHVxJXFJTz9A",
+        authDomain: "eleicoesvirtual.firebaseapp.com",
+        projectId: "eleicoesvirtual",
+        storageBucket: "eleicoesvirtual.appspot.com",
+        messagingSenderId: "739485088609",
+        appId: "1:739485088609:web:d31f97dc972e62ba202320",
+        measurementId: "G-TCY2FJ5J70",
+      };
+
+      // Inicializar o Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Tornar o Firebase disponível globalmente se necessário
+      window.firebaseApp = app;
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+
+      console.log("Firebase foi inicializado");
+    </script>
 
     <style media="screen">
       body {
@@ -28,20 +51,20 @@
   </head>
   <body>
     <noscript>
-      <strong
-        >We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work
-        properly without JavaScript enabled. Please enable it to
-        continue.</strong
-      >
+      <strong>
+        We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work
+        properly without JavaScript enabled. Please enable it to continue.
+      </strong>
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->
 
     <script>
+      // Agora o Firebase já foi carregado pelo script acima
       document.addEventListener("DOMContentLoaded", function () {
-        const loadEl = document.querySelector("#load");
         try {
-          let app = firebase.app();
+          // Usar a variável firebaseApp para acessar a instância do Firebase
+          let app = window.firebaseApp;
           let features = ["auth", "firestore"].filter(
             (feature) => typeof app[feature] === "function"
           );
